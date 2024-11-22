@@ -1,0 +1,42 @@
+# version: '3.8' # Using the latest stable version of Compose
+
+version: '3.8'  # Ensure this is at the top and uncommented
+
+services:
+  springboot-app:
+    container_name: springboot-app
+    build:
+      context: ./boot # Ensure this directory contains a valid Dockerfile
+    image: spring-boot-app:latest # Optional but good practice to tag the image
+    ports:
+      - "8080:8080" # Maps host port 8080 to container port 8080
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev # Use correct syntax for environment variables
+      - SPRING_DATASOURCE_URL=jdbc:mysql://dbservices:3306/docker?createDatabaseIfNotExist=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+      - spring.jpa.hibernate.ddl-auto=update
+      - spring.datasource.hikari.connection-timeout=30000  # 30 seconds
+      - spring.datasource.hikari.idle-timeout=600000  # 10 minutes
+      - spring.datasource.hikari.max-lifetime=1800000  # 30 minutes
+      - spring.datasource.hikari.maximum-pool-size=10
+
+    restart: always # Ensures the container restarts automatically if it crashes
+    depends_on:
+      - dbservices
+    networks:
+      - bootapp
+  dbservices:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./data:/var/lib/mysql
+    ports:
+      - 3307:3306
+    networks:
+      - bootapp
+
+networks:
+  bootapp:
